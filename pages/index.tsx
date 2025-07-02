@@ -1,15 +1,66 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
 
-  // Replace this URL with your downloaded image path or hosted URL
-  const backgroundImageUrl = "/your-stock-animation.jpg";
+// Replace this URL with your downloaded image path or hosted URL
+const backgroundImageUrl = "stocksphoto.jpg"; //hon bt 8ayyir l soura la ba3den
 
-  const isFormValid = email.trim() !== "" && password.trim() !== "";
+const isFormValid = email.trim() !== "" && password.trim() !== "";
 
-  return (
+const handleLogin = async () => {
+  try {
+    const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.detail || "Login failed");
+      return;
+    }
+
+    // Save token
+    localStorage.setItem("access_token", data.access_token);
+    alert("Login successful!");
+
+    // Optional: redirect
+    // window.location.href = "/portfolio";
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      alert("Please enter your email first.");
+      return;
+    }
+
+    try {
+      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      alert(data.message || "Check your email for password reset instructions.");
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      alert("Something went wrong.");
+    }
+  };
+
+return (
     <div
       style={{
         minHeight: "100vh",
@@ -50,7 +101,7 @@ export default function Home() {
         }}
       >
         <h2 style={{ marginBottom: "1.5rem" }}>LOGIN</h2>
-
+        {/* email */}
         <input
           type="email"
           placeholder="Email"
@@ -65,7 +116,7 @@ export default function Home() {
             fontSize: "1rem",
           }}
         />
-
+        {/* password */}
         <input
           type="password"
           placeholder="Password"
@@ -82,12 +133,12 @@ export default function Home() {
         />
 
         <div style={{ textAlign: "right", marginBottom: "1.5rem" }}>
-          <a
-            href="#"
-            style={{ fontSize: "0.9rem", color: "#0070f3", textDecoration: "underline" }}
+          <span
+            onClick={handleForgotPassword}
+            style={{ fontSize: "0.9rem", color: "#0070f3", textDecoration: "underline", cursor: "pointer" }}
           >
             Forgot password?
-          </a>
+          </span>
         </div>
 
         <button
@@ -104,7 +155,7 @@ export default function Home() {
             cursor: isFormValid ? "pointer" : "not-allowed",
             marginBottom: "1.5rem",
           }}
-          onClick={() => alert(`Login with ${email}`)} // Replace with real login handler
+          onClick={handleLogin} // Replace with real login handler
         >
           Login
         </button>
