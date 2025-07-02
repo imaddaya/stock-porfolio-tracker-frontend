@@ -1,45 +1,47 @@
 import { useState } from "react";
 
 export default function Home() {
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState(""); // Add status state
 
-// Replace this URL with your downloaded image path or hosted URL
-const backgroundImageUrl = "stocksphoto.jpg"; //hon bt 8ayyir l soura la ba3den
+  // Replace this URL with your downloaded image path or hosted URL
+  const backgroundImageUrl = "stocksphoto.jpg";
 
-const isFormValid = email.trim() !== "" && password.trim() !== "";
+  const isFormValid = email.trim() !== "" && password.trim() !== "";
 
-const handleLogin = async () => {
-  try {
-    const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      alert(data.detail || "Login failed");
-      return;
+      if (!response.ok) {
+        setStatus(data.detail || "Login failed");  // replaced alert
+        return;
+      }
+
+      // Save token
+      localStorage.setItem("access_token", data.access_token);
+      setStatus("Login successful!");  // replaced alert
+
+      // Optional: redirect
+      // window.location.href = "/portfolio";
+    } catch (error) {
+      console.error("Login error:", error);
+      setStatus("Something went wrong. Please try again."); // replaced alert
     }
+  };
 
-    // Save token
-    localStorage.setItem("access_token", data.access_token);
-    alert("Login successful!");
-
-    // Optional: redirect
-    // window.location.href = "/portfolio";
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Something went wrong. Please try again.");
-  }
-};
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      alert("Please enter your email first.");
+      setStatus("Please enter your email first."); // replaced alert
       return;
     }
 
@@ -53,14 +55,14 @@ const handleLogin = async () => {
       });
 
       const data = await response.json();
-      alert(data.message || "Check your email for password reset instructions.");
+      setStatus(data.message || "Check your email for password reset instructions."); // replaced alert
     } catch (error) {
       console.error("Forgot password error:", error);
-      alert("Something went wrong.");
+      setStatus("Something went wrong."); // replaced alert
     }
   };
 
-return (
+  return (
     <div
       style={{
         minHeight: "100vh",
@@ -72,13 +74,13 @@ return (
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        fontFamily: "'Poppins', sans-serif", // Fancy font example
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
       {/* Title */}
       <h1
         style={{
-          color: "babyblue", // Or "#89CFF0" as hex for baby blue
+          color: "babyblue",
           fontWeight: "bold",
           fontSize: "4rem",
           marginBottom: "3rem",
@@ -155,7 +157,7 @@ return (
             cursor: isFormValid ? "pointer" : "not-allowed",
             marginBottom: "1.5rem",
           }}
-          onClick={handleLogin} // Replace with real login handler
+          onClick={handleLogin}
         >
           Login
         </button>
@@ -169,6 +171,9 @@ return (
             Signup here
           </a>
         </div>
+
+        {/* Display status messages here */}
+        {status && <p style={{ marginTop: "1rem", color: "red" }}>{status}</p>}
       </div>
     </div>
   );
