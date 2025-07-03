@@ -1,59 +1,115 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+// pages/loggedin.tsx
+import { useEffect, useState, useRef } from "react";
 
 export default function LoggedIn() {
-  const router = useRouter();
-  const [userEmail, setUserEmail] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
+  const [email, setEmail] = useState("");
+  const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/");
-    } else {
-      // Extract email from token (in a real app, decode JWT properly)
-      const storedEmail = localStorage.getItem("user_email");
-      if (storedEmail) setUserEmail(storedEmail);
-    }
-  }, [router]);
+    const storedEmail = localStorage.getItem("user_email") || "";
+    setEmail(storedEmail);
 
-  const dummyStocks = [
-    { symbol: "AAPL", name: "Apple Inc.", price: "$190.20", change: "+1.2%", country: "USA" },
-    { symbol: "TSLA", name: "Tesla Inc.", price: "$220.45", change: "-0.8%", country: "USA" },
-    { symbol: "BMW", name: "BMW AG", price: "€95.10", change: "+0.5%", country: "Germany" },
-    { symbol: "SONY", name: "Sony Group", price: "$85.60", change: "-0.3%", country: "Japan" },
-  ];
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    setSearchOpen(true);
+
+    if (value.length < 1) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/search-symbols?keywords=${value}`
+      );
+      const data = await res.json();
+
+      const formattedSuggestions = data.slice(0, 15).map(
+        (item: { symbol: string; name: string }) => `${item.name} (${item.symbol})`
+      );
+
+      setSuggestions(formattedSuggestions);
+    } catch (err) {
+      console.error("Search error", err);
+      setSuggestions([]);
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "Poppins, sans-serif" }}>
-      {/* Top Ribbon */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#1e293b", color: "white", padding: "1rem 2rem" }}>
-        <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>Stokki</div>
-
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+      {/* Ribbon */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: "#f0f0f0",
+          padding: "1rem 2rem",
+          borderBottom: "1px solid #ccc",
+        }}
+      >
+        <div style={{ fontWeight: "bold", fontSize: "1.5rem" }}>Stokki</div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div>{userEmail}</div>
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              style={{ backgroundColor: "#334155", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer" }}
+          <span>{email}</span>
+          <div style={{ position: "relative" }} ref={settingsRef}>
+            <div
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              style={{
+                backgroundColor: "#fff",
+                padding: "0.5rem 1rem",
+                borderRadius: "8px",
+                cursor: "pointer",
+                border: "1px solid #ccc",
+              }}
             >
               Settings
-            </button>
-            {showSettings && (
-              <div style={{ position: "absolute", top: "110%", right: 0, backgroundColor: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.2)", borderRadius: "8px", overflow: "hidden", minWidth: "160px" }}>
-                {['Profile', 'Email Reminder', 'Logout'].map((option, idx) => (
+            </div>
+            {settingsOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "110%",
+                  right: 0,
+                  background: "white",
+                  border: "1px solid #ccc",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  zIndex: 10,
+                }}
+              >
+                {["My Stocks", "Profile", "Email Reminder", "Logout"].map((item) => (
                   <div
-                    key={idx}
+                    key={item}
                     style={{
-                      padding: "0.8rem 1rem",
-                      cursor: "pointer",
-                      transition: "background 0.2s",
+                      padding: "0.8rem 1.2rem",
                       color: "black",
+                      backgroundColor: "white",
+                      cursor: "pointer",
+                      transition: "0.3s",
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#3b82f6"}
-                    onMouseLeave={e => e.currentTarget.style.background = "white"}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#89CFF0")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
                   >
-                    {option}
+                    {item}
                   </div>
                 ))}
               </div>
@@ -62,43 +118,59 @@ export default function LoggedIn() {
         </div>
       </div>
 
-      {/* Search Input */}
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+      {/* Search */}
+      <div
+        ref={searchRef}
+        style={{ margin: "2rem auto", width: "400px", position: "relative" }}
+      >
         <input
           type="text"
+          value={search}
+          onChange={handleSearchChange}
           placeholder="type symbol or company name here"
-          style={{ padding: "0.8rem 1.2rem", width: "60%", borderRadius: "10px", border: "1px solid #ccc", fontSize: "1rem" }}
+          onFocus={() => setSearchOpen(true)}
+          style={{
+            width: "100%",
+            padding: "0.8rem 1rem",
+            borderRadius: "10px",
+            border: "1px solid #ccc",
+          }}
         />
-      </div>
-
-      {/* Grid of Stocks */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "1.5rem",
-          padding: "2rem",
-        }}
-      >
-        {dummyStocks.map((stock, idx) => (
+        {searchOpen && search && (
           <div
-            key={idx}
             style={{
+              maxHeight: "200px",
+              overflowY: "auto",
               border: "1px solid #ccc",
-              borderRadius: "12px",
-              padding: "1rem",
-              textAlign: "center",
+              borderRadius: "10px",
+              marginTop: "0.5rem",
               backgroundColor: "white",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+              position: "absolute",
+              width: "100%",
+              zIndex: 1000,
             }}
           >
-            <div style={{ fontWeight: "bold", fontSize: "1.2rem" }}>{stock.symbol}</div>
-            <div>{stock.name}</div>
-            <div>Price: {stock.price}</div>
-            <div style={{ color: stock.change.startsWith("+") ? "green" : "red" }}>Change: {stock.change}</div>
-            <div>Country: {stock.country}</div>
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: "0.7rem 1rem",
+                  color: "black",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#89CFF0")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+              >
+                {suggestion}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* Placeholder for stock boxes */}
+      <div style={{ textAlign: "center", marginTop: "3rem" }}>
+        <h2>Stock boxes will appear here...</h2>
       </div>
     </div>
   );
