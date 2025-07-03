@@ -1,12 +1,12 @@
+// pages/index.tsx (Login Page)
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState(""); // Add status state
-
-  // Replace this URL with your downloaded image path or hosted URL
-  const backgroundImageUrl = "stocksphoto.jpg";
+  const [status, setStatus] = useState("");
 
   const isFormValid = email.trim() !== "" && password.trim() !== "";
 
@@ -23,25 +23,22 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        setStatus(data.detail || "Login failed");  // replaced alert
+        setStatus(data.detail || "Login failed");
         return;
       }
 
-      // Save token
       localStorage.setItem("access_token", data.access_token);
-      setStatus("Login successful!");  // replaced alert
-
-      // Optional: redirect
-      // window.location.href = "/portfolio";
+      localStorage.setItem("user_email", email);
+      router.push("/loggedin");
     } catch (error) {
       console.error("Login error:", error);
-      setStatus("Something went wrong. Please try again."); // replaced alert
+      setStatus("Something went wrong. Please try again.");
     }
   };
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      setStatus("Please enter your email first."); // replaced alert
+      setStatus("Please enter your email first.");
       return;
     }
 
@@ -55,10 +52,10 @@ export default function Home() {
       });
 
       const data = await response.json();
-      setStatus(data.message || "Check your email for password reset instructions."); // replaced alert
+      setStatus(data.message || "Check your email for password reset instructions.");
     } catch (error) {
       console.error("Forgot password error:", error);
-      setStatus("Something went wrong."); // replaced alert
+      setStatus("Something went wrong.");
     }
   };
 
@@ -66,7 +63,7 @@ export default function Home() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundImage: `url(${backgroundImageUrl})`,
+        backgroundImage: `url(stocksphoto.jpg)`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         display: "flex",
@@ -77,10 +74,9 @@ export default function Home() {
         fontFamily: "'Poppins', sans-serif",
       }}
     >
-      {/* Title */}
       <h1
         style={{
-          color: "babyblue",
+          color: "#89CFF0",
           fontWeight: "bold",
           fontSize: "4rem",
           marginBottom: "3rem",
@@ -90,7 +86,6 @@ export default function Home() {
         Stokki
       </h1>
 
-      {/* Login Box */}
       <div
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.85)",
@@ -103,7 +98,6 @@ export default function Home() {
         }}
       >
         <h2 style={{ marginBottom: "1.5rem" }}>LOGIN</h2>
-        {/* email */}
         <input
           type="email"
           placeholder="Email"
@@ -118,7 +112,6 @@ export default function Home() {
             fontSize: "1rem",
           }}
         />
-        {/* password */}
         <input
           type="password"
           placeholder="Password"
@@ -145,6 +138,7 @@ export default function Home() {
 
         <button
           disabled={!isFormValid}
+          onClick={handleLogin}
           style={{
             width: "100%",
             padding: "0.9rem",
@@ -157,7 +151,6 @@ export default function Home() {
             cursor: isFormValid ? "pointer" : "not-allowed",
             marginBottom: "1.5rem",
           }}
-          onClick={handleLogin}
         >
           Login
         </button>
@@ -172,8 +165,7 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Display status messages here */}
-        {status && <p style={{ marginTop: "1rem", color: "red" }}>{status}</p>}
+        {status && <p style={{ color: "red", marginTop: "1rem" }}>{status}</p>}
       </div>
     </div>
   );
