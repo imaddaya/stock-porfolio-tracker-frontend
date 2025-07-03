@@ -36,8 +36,58 @@ export default function MyStocks() {
       });
   }, [router]);
 
+  const handleRemove = async (ticker: string) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    try {
+      const res = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ticker }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(`Failed to remove stock: ${errorData.detail || "Unknown error"}`);
+        return;
+      }
+
+      // Update frontend state to remove the stock immediately
+      setStocks((prev) => prev.filter((stock) => stock.ticker !== ticker));
+    } catch (err) {
+      console.error("Error removing stock:", err);
+      alert("An error occurred while removing the stock.");
+    }
+  };
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", padding: "2rem" }}>
+      {/* Return link at top left */}
+      <div style={{ marginBottom: "1rem" }}>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            router.push("/loggedin");
+          }}
+          style={{
+            textDecoration: "underline",
+            color: "#0070f3",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+          }}
+        >
+          &larr; Return to main page
+        </a>
+      </div>
+
       <h1 style={{ marginBottom: "2rem" }}>My Stocks</h1>
       <div
         style={{
@@ -70,10 +120,18 @@ export default function MyStocks() {
               </p>
             )}
             <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-              <button style={{ flex: 1, padding: "0.5rem", cursor: "pointer" }} disabled>
-                Add
-              </button>
-              <button style={{ flex: 1, padding: "0.5rem", cursor: "pointer" }} disabled>
+              <button
+                style={{
+                  flex: 1,
+                  padding: "0.5rem",
+                  cursor: "pointer",
+                  backgroundColor: "#e74c3c",
+                  border: "none",
+                  color: "white",
+                  borderRadius: "5px",
+                }}
+                onClick={() => handleRemove(ticker)}
+              >
                 Remove
               </button>
             </div>

@@ -28,7 +28,7 @@ export default function ResetPassword() {
     setStatus(""); // clear previous status
 
     try {
-      const response = await fetch("https://your-backend-url/reset-password", {
+      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, new_password: newPassword }),

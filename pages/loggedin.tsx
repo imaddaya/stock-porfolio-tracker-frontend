@@ -1,12 +1,14 @@
 // pages/loggedin.tsx
 import { useEffect, useState, useRef } from "react";
-
+import { useRouter } from "next/router";
+  
 export default function LoggedIn() {
   const [email, setEmail] = useState("");
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const router = useRouter();
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -108,10 +110,18 @@ export default function LoggedIn() {
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#89CFF0")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                    onClick={() => {
+                      if (item === "My Stocks") {
+                        router.push("/mystocks");
+                        setSettingsOpen(false);
+                      }
+                      // other options: can add logic later
+                    }}
                   >
                     {item}
                   </div>
                 ))}
+
               </div>
             )}
           </div>
