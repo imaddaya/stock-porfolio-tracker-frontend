@@ -3,9 +3,10 @@ import { useRouter } from "next/router";
 
 type StockSummary = {
   ticker: string;
-  price: string;
-  change_percent: string;
+  price?: string;
+  change_percent?: string;
   country?: string;
+  error?: string;
 };
 
 export default function MyStocks() {
@@ -19,21 +20,19 @@ export default function MyStocks() {
       return;
     }
 
-    fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary", {
+    // Only load tickers without fetching prices
+    fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch portfolio");
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        setStocks(data.summary || []);
+        if (Array.isArray(data.tickers)) {
+          setStocks(data.tickers.map((ticker: string) => ({ ticker })));
+        }
       })
-      .catch((err) => {
-        console.error(err);
-      });
+      .catch(console.error);
   }, [router]);
 
   const handleRemove = async (ticker: string) => {
@@ -44,14 +43,17 @@ export default function MyStocks() {
     }
 
     try {
-      const res = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ticker }),
-      });
+      const res = await fetch(
+        "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ticker }),
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -59,7 +61,6 @@ export default function MyStocks() {
         return;
       }
 
-      // Update frontend state to remove the stock immediately
       setStocks((prev) => prev.filter((stock) => stock.ticker !== ticker));
     } catch (err) {
       console.error("Error removing stock:", err);
@@ -67,9 +68,44 @@ export default function MyStocks() {
     }
   };
 
+  const handleRefresh = async (ticker: string) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary?ticker=${ticker}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      const updatedStock = data.summary?.[0];
+
+      if (!updatedStock || updatedStock.error) {
+        alert(`Error fetching ${ticker}: ${updatedStock?.error || "Unknown"}`);
+        return;
+      }
+
+      setStocks((prev) =>
+        prev.map((stock) =>
+          stock.ticker === ticker ? { ...stock, ...updatedStock } : stock
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to refresh stock.");
+    }
+  };
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", padding: "2rem" }}>
-      {/* Return link at top left */}
       <div style={{ marginBottom: "1rem" }}>
         <a
           href="#"
@@ -105,14 +141,32 @@ export default function MyStocks() {
               borderRadius: "10px",
               padding: "1rem",
               boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+              position: "relative",
             }}
           >
             <h3 style={{ margin: "0 0 0.5rem 0" }}>{ticker}</h3>
+            <button
+              onClick={() => handleRefresh(ticker)}
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                fontSize: "0.8rem",
+                background: "#3498db",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                padding: "0.3rem 0.6rem",
+                cursor: "pointer",
+              }}
+            >
+              Refresh
+            </button>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Price:</strong> {price}
+              <strong>Price:</strong> {price ?? "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Change:</strong> {change_percent}
+              <strong>Change:</strong> {change_percent ?? "N/A"}
             </p>
             {country && (
               <p style={{ margin: "0.3rem 0" }}>

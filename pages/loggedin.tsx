@@ -28,7 +28,26 @@ export default function LoggedIn() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  
+  const handleLogout = async () => {
+    try {
+      // Optional backend logout call
+      await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/logout", {
+        method: "POST",
+      });
 
+      // Clear session info
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user_email");
+
+      // Redirect to login page
+      router.push("/");  // 👈 sends user back to login
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
@@ -111,11 +130,21 @@ export default function LoggedIn() {
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#89CFF0")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
                     onClick={() => {
-                      if (item === "My Stocks") {
-                        router.push("/mystocks");
-                        setSettingsOpen(false);
+                      switch (item) {
+                        case "My Stocks":
+                          router.push("/mystocks");
+                          break;
+                        case "Profile":
+                          router.push("/profile");
+                          break;
+                        case "Email Reminder":
+                          router.push("/email-reminder");
+                          break;
+                        case "Logout":
+                          handleLogout();
+                          break;
                       }
-                      // other options: can add logic later
+                      setSettingsOpen(false); // always close menu
                     }}
                   >
                     {item}
