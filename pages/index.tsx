@@ -1,8 +1,8 @@
-// pages/index.tsx (Login Page)
+// pages/login_page.tsx
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-export default function Home() {
+export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +12,7 @@ export default function Home() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/login", {
+      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -27,7 +27,8 @@ export default function Home() {
         return;
       }
 
-      localStorage.setItem("access_token", data.access_token);
+      // Once token logic is implemented, store it
+      localStorage.setItem("access_token", data.access_token || "mock_token");
       localStorage.setItem("user_email", email);
       router.push("/loggedin");
     } catch (error) {
@@ -43,7 +44,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/forgot-password", {
+      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -158,7 +159,7 @@ export default function Home() {
         <div>
           Don't have an account?{" "}
           <a
-            href="/Signup"
+            href="/signup"
             style={{ color: "#0070f3", textDecoration: "underline", cursor: "pointer" }}
           >
             Signup here

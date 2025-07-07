@@ -1,7 +1,6 @@
-// pages/loggedin.tsx
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
-  
+
 export default function LoggedIn() {
   const [email, setEmail] = useState("");
   const [search, setSearch] = useState("");
@@ -25,29 +24,22 @@ export default function LoggedIn() {
         setSearchOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
   const handleLogout = async () => {
     try {
-      // Optional backend logout call
-      await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/logout", {
-        method: "POST",
-      });
-
-      // Clear session info
+      // Optional: call backend to invalidate token
       localStorage.removeItem("access_token");
       localStorage.removeItem("user_email");
-
-      // Redirect to login page
-      router.push("/");  // 👈 sends user back to login
+      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
 
-  
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
@@ -60,8 +52,13 @@ export default function LoggedIn() {
 
     try {
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/search-symbols?keywords=${value}`
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/search?keywords=${value}`
       );
+
+      if (!res.ok) {
+        throw new Error("Search failed");
+      }
+
       const data = await res.json();
 
       const formattedSuggestions = data.slice(0, 15).map(
@@ -144,13 +141,12 @@ export default function LoggedIn() {
                           handleLogout();
                           break;
                       }
-                      setSettingsOpen(false); // always close menu
+                      setSettingsOpen(false);
                     }}
                   >
                     {item}
                   </div>
                 ))}
-
               </div>
             )}
           </div>
@@ -207,7 +203,7 @@ export default function LoggedIn() {
         )}
       </div>
 
-      {/* Placeholder for stock boxes */}
+      {/* Placeholder for stock grid */}
       <div style={{ textAlign: "center", marginTop: "3rem" }}>
         <h2>Stock boxes will appear here...</h2>
       </div>

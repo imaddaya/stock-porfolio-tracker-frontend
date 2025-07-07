@@ -10,6 +10,14 @@ export default function ResetPassword() {
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (!router.isReady) return;
+    
+    if (!token) {
+      setStatus("Missing token. Please check your email link.");
+    }
+  }, [token, router.isReady]);
+
   const handleSubmit = async () => {
     if (!token) {
       setStatus("Verification token is missing.");
@@ -24,15 +32,20 @@ export default function ResetPassword() {
       setStatus("Password must be at least 6 characters");
       return;
     }
+
     setIsLoading(true);
-    setStatus(""); // clear previous status
+    setStatus("");
 
     try {
-      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, new_password: newPassword }),
-      });
+      const response = await fetch(
+        "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, new_password: newPassword }),
+        }
+      );
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -46,10 +59,10 @@ export default function ResetPassword() {
 
       setTimeout(() => {
         router.push("/");
-      }, 1500);
+      }, 2000);
     } catch (error) {
       console.error("Error:", error);
-      setStatus("Something went wrong.");
+      setStatus("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

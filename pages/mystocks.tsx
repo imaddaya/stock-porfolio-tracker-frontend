@@ -11,6 +11,7 @@ type StockSummary = {
 
 export default function MyStocks() {
   const [stocks, setStocks] = useState<StockSummary[]>([]);
+  const [loadingTicker, setLoadingTicker] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +21,6 @@ export default function MyStocks() {
       return;
     }
 
-    // Only load tickers without fetching prices
     fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -28,8 +28,10 @@ export default function MyStocks() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data.tickers)) {
+        if (data && Array.isArray(data.tickers)) {
           setStocks(data.tickers.map((ticker: string) => ({ ticker })));
+        } else {
+          console.warn("Unexpected portfolio format:", data);
         }
       })
       .catch(console.error);
@@ -75,6 +77,8 @@ export default function MyStocks() {
       return;
     }
 
+    setLoadingTicker(ticker);
+
     try {
       const res = await fetch(
         `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary?ticker=${ticker}`,
@@ -86,7 +90,7 @@ export default function MyStocks() {
       );
 
       const data = await res.json();
-      const updatedStock = data.summary?.[0];
+      const updatedStock = data.summary;
 
       if (!updatedStock || updatedStock.error) {
         alert(`Error fetching ${ticker}: ${updatedStock?.error || "Unknown"}`);
@@ -101,6 +105,8 @@ export default function MyStocks() {
     } catch (err) {
       console.error(err);
       alert("Failed to refresh stock.");
+    } finally {
+      setLoadingTicker(null);
     }
   };
 
@@ -147,6 +153,7 @@ export default function MyStocks() {
             <h3 style={{ margin: "0 0 0.5rem 0" }}>{ticker}</h3>
             <button
               onClick={() => handleRefresh(ticker)}
+              disabled={loadingTicker === ticker}
               style={{
                 position: "absolute",
                 top: "10px",
@@ -157,10 +164,10 @@ export default function MyStocks() {
                 border: "none",
                 borderRadius: "5px",
                 padding: "0.3rem 0.6rem",
-                cursor: "pointer",
+                cursor: loadingTicker === ticker ? "not-allowed" : "pointer",
               }}
             >
-              Refresh
+              {loadingTicker === ticker ? "Refreshing..." : "Refresh"}
             </button>
             <p style={{ margin: "0.3rem 0" }}>
               <strong>Price:</strong> {price ?? "N/A"}

@@ -12,27 +12,25 @@ export default function EmailVerified() {
 
     const tokenStr = Array.isArray(token) ? token[0] : token;
 
-    fetch(`https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/verify-email?token=${encodeURIComponent(tokenStr)}`)
+    fetch(
+      `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/verify-email?token=${encodeURIComponent(
+        tokenStr
+      )}`
+    )
       .then(async (res) => {
+        const data = await res.json();
         if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          throw new Error(errData?.detail || "Verification failed.");
+          throw new Error(data?.detail || "Verification failed.");
         }
-        return res.json();
+
+        setStatus("Email verified successfully. Redirecting to login...");
+        setTimeout(() => {
+          router.push("/"); // go to login page
+        }, 3000);
       })
-      .then(data => {
-        if (data.verified) {
-          setStatus("Email verified! You will be redirected to the login page shortly.");
-          setTimeout(() => {
-            router.push("/"); // Redirect to login page after 3 seconds
-          }, 3000);
-        } else if (data.detail) {
-          setStatus(`Error: ${data.detail}`);
-        } else {
-          setStatus("Verification failed.");
-        }
-      })
-      .catch((error) => setStatus(`Error verifying email: ${error.message}`));
+      .catch((err) => {
+        setStatus(`Error verifying email: ${err.message}`);
+      });
   }, [token, router]);
 
   return (
