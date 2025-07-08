@@ -78,15 +78,31 @@ export default function ResetPassword() {
         placeholder="New Password"
         value={newPassword}
         onChange={(e) => setNewPassword(e.target.value)}
-        style={{ margin: "1rem", padding: "0.5rem" }}
+        style={{ margin: "1rem", padding: "0.5rem" ,width: "300px"}}
       />
       <br />
+      <ul
+        style={{
+          fontSize: "0.8rem",
+          color: "gray",
+          textAlign: "left",
+          maxWidth: "300px",
+          margin: "0 auto",
+          paddingLeft: "1.2rem",
+        }}
+      >
+        <li>At least 8 characters</li>
+        <li>At least one uppercase letter</li>
+        <li>At least one lowercase letter</li>
+        <li>At least one number</li>
+        <li>At least one special character (!@#$%^&*)</li>
+      </ul>
       <input
         type="password"
         placeholder="Confirm New Password"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
-        style={{ margin: "1rem", padding: "0.5rem" }}
+        style={{ margin: "1rem", padding: "0.5rem",width: "300px" }}
       />
       <br />
       <button

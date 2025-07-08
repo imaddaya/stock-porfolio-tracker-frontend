@@ -4,13 +4,12 @@ import { useRouter } from "next/router";
 export default function LoggedIn() {
   const [email, setEmail] = useState("");
   const [search, setSearch] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{ symbol: string; name: string }[]>([]);
+  const [offset, setOffset] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const router = useRouter();
 
   const settingsRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("user_email") || "";
@@ -19,9 +18,6 @@ export default function LoggedIn() {
     const handleClickOutside = (e: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setSettingsOpen(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
       }
     };
 
@@ -40,35 +36,96 @@ export default function LoggedIn() {
     }
   };
 
-  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Just update the search string here - no fetch call
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
-    setSearchOpen(true);
+  };
 
-    if (value.length < 1) {
-      setSuggestions([]);
-      return;
-    }
+  // Debounced fetch triggered on search change
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (search.length < 1) {
+        setSuggestions([]);
+        setOffset(0);
+        return;
+      }
 
+      try {
+        const token = localStorage.getItem("access_token") || "";
+
+        const res = await fetch(
+          `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks?keywords=${encodeURIComponent(
+            search
+          )}&offset=0&limit=50`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("Search API error:", res.status, errorData);
+          setSuggestions([]);
+          setOffset(0);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          console.error("Expected array from /stocks but got:", data);
+          setSuggestions([]);
+          setOffset(0);
+          return;
+        }
+
+        setSuggestions(data);
+        setOffset(50);
+      } catch (err) {
+        console.error("Search error", err);
+        setSuggestions([]);
+        setOffset(0);
+      }
+    }, 750); // debounce delay 750ms
+
+    return () => clearTimeout(delayDebounce); // cancel previous timer if user keeps typing
+  }, [search]);
+
+  const loadMoreStocks = async () => {
     try {
+      const token = localStorage.getItem("access_token") || "";
+
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/search?keywords=${value}`
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks?keywords=${encodeURIComponent(
+          search
+        )}&offset=${offset}&limit=50`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (!res.ok) {
-        throw new Error("Search failed");
+        const errorData = await res.json();
+        console.error("Load more API error:", res.status, errorData);
+        return;
       }
 
       const data = await res.json();
 
-      const formattedSuggestions = data.slice(0, 15).map(
-        (item: { symbol: string; name: string }) => `${item.name} (${item.symbol})`
-      );
+      if (!Array.isArray(data) || data.length === 0) {
+        // No more stocks to load
+        return;
+      }
 
-      setSuggestions(formattedSuggestions);
+      setSuggestions((prev) => [...prev, ...data]);
+      setOffset((prev) => prev + 50);
     } catch (err) {
-      console.error("Search error", err);
-      setSuggestions([]);
+      console.error("Load more error", err);
     }
   };
 
@@ -155,7 +212,6 @@ export default function LoggedIn() {
 
       {/* Search */}
       <div
-        ref={searchRef}
         style={{ margin: "2rem auto", width: "400px", position: "relative" }}
       >
         <input
@@ -163,7 +219,6 @@ export default function LoggedIn() {
           value={search}
           onChange={handleSearchChange}
           placeholder="type symbol or company name here"
-          onFocus={() => setSearchOpen(true)}
           style={{
             width: "100%",
             padding: "0.8rem 1rem",
@@ -171,41 +226,109 @@ export default function LoggedIn() {
             border: "1px solid #ccc",
           }}
         />
-        {searchOpen && search && (
-          <div
-            style={{
-              maxHeight: "200px",
-              overflowY: "auto",
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              marginTop: "0.5rem",
-              backgroundColor: "white",
-              position: "absolute",
-              width: "100%",
-              zIndex: 1000,
-            }}
-          >
-            {suggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: "0.7rem 1rem",
-                  color: "black",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#89CFF0")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
-              >
-                {suggestion}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Placeholder for stock grid */}
-      <div style={{ textAlign: "center", marginTop: "3rem" }}>
-        <h2>Stock boxes will appear here...</h2>
+      {/* Stock boxes and Show More */}
+      <div style={{ marginTop: "3rem", padding: "0 2rem" }}>
+        {suggestions.length === 0 ? (
+          <h2 style={{ textAlign: "center" }}>Stock boxes will appear here...</h2>
+        ) : (
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                maxWidth: "1300px",
+                margin: "0 auto",
+                gap: "1rem",
+                justifyContent: "center",
+                padding: "0 1rem",
+              }}
+            >
+              {suggestions.map(({ symbol, name }) => (
+                <div
+                  key={symbol}
+                  style={{
+                    border: "1px solid #ddd",
+                    borderRadius: "10px",
+                    padding: "1rem",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    textAlign: "left",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    height: "160px",
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={symbol}
+                  >
+                    <strong>Symbol:</strong> {symbol}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "normal",
+                      maxHeight: "3.6em", // 2 lines max
+                      overflow: "hidden",
+                    }}
+                    title={name}
+                  >
+                    <strong>Company name:</strong> {name}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      // TODO: Add backend call here to add stock to user's portfolio
+                      console.log("Add to my stocks:", symbol);
+                    }}
+                    style={{
+                      marginTop: "auto",
+                      backgroundColor: "#007bff",
+                      border: "none",
+                      color: "white",
+                      padding: "0.5rem",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      width: "100%",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Add to my stocks
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Show More Button */}
+            <div style={{ textAlign: "center", marginTop: "2rem" }}>
+              <button
+                onClick={loadMoreStocks}
+                style={{
+                  backgroundColor: "#28a745",
+                  border: "none",
+                  color: "white",
+                  padding: "0.5rem 1.2rem",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Show More Stocks
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
