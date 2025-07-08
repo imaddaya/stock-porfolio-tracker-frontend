@@ -27,7 +27,6 @@ export default function LoggedIn() {
 
   const handleLogout = async () => {
     try {
-      // Optional: call backend to invalidate token
       localStorage.removeItem("access_token");
       localStorage.removeItem("user_email");
       router.push("/");
@@ -36,13 +35,11 @@ export default function LoggedIn() {
     }
   };
 
-  // Just update the search string here - no fetch call
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
   };
 
-  // Debounced fetch triggered on search change
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (search.length < 1) {
@@ -89,9 +86,9 @@ export default function LoggedIn() {
         setSuggestions([]);
         setOffset(0);
       }
-    }, 750); // debounce delay 750ms
+    }, 750);
 
-    return () => clearTimeout(delayDebounce); // cancel previous timer if user keeps typing
+    return () => clearTimeout(delayDebounce);
   }, [search]);
 
   const loadMoreStocks = async () => {
@@ -118,7 +115,6 @@ export default function LoggedIn() {
       const data = await res.json();
 
       if (!Array.isArray(data) || data.length === 0) {
-        // No more stocks to load
         return;
       }
 
@@ -131,7 +127,6 @@ export default function LoggedIn() {
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      {/* Ribbon */}
       <div
         style={{
           display: "flex",
@@ -210,10 +205,7 @@ export default function LoggedIn() {
         </div>
       </div>
 
-      {/* Search */}
-      <div
-        style={{ margin: "2rem auto", width: "400px", position: "relative" }}
-      >
+      <div style={{ margin: "2rem auto", width: "400px", position: "relative" }}>
         <input
           type="text"
           value={search}
@@ -228,7 +220,6 @@ export default function LoggedIn() {
         />
       </div>
 
-      {/* Stock boxes and Show More */}
       <div style={{ marginTop: "3rem", padding: "0 2rem" }}>
         {suggestions.length === 0 ? (
           <h2 style={{ textAlign: "center" }}>Stock boxes will appear here...</h2>
@@ -279,7 +270,7 @@ export default function LoggedIn() {
                       wordWrap: "break-word",
                       overflowWrap: "break-word",
                       whiteSpace: "normal",
-                      maxHeight: "3.6em", // 2 lines max
+                      maxHeight: "3.6em",
                       overflow: "hidden",
                     }}
                     title={name}
@@ -288,9 +279,29 @@ export default function LoggedIn() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      // TODO: Add backend call here to add stock to user's portfolio
-                      console.log("Add to my stocks:", symbol);
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("access_token") || "";
+
+                        const res = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/add", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ ticker: symbol }),
+                        });
+
+                        if (!res.ok) {
+                          const error = await res.json();
+                          console.error("Failed to add stock:", error.detail || res.statusText);
+                          return;
+                        }
+
+                        setSuggestions((prev) => prev.filter((s) => s.symbol !== symbol));
+                      } catch (err) {
+                        console.error("Add to portfolio error:", err);
+                      }
                     }}
                     style={{
                       marginTop: "auto",
@@ -310,7 +321,6 @@ export default function LoggedIn() {
               ))}
             </div>
 
-            {/* Show More Button */}
             <div style={{ textAlign: "center", marginTop: "2rem" }}>
               <button
                 onClick={loadMoreStocks}

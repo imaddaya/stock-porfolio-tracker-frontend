@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 type StockSummary = {
-  ticker: string;
-  price?: string;
+  symbol: string;
+  name: string;
+  price?: number;
   change_percent?: string;
   country?: string;
   error?: string;
@@ -11,7 +12,7 @@ type StockSummary = {
 
 export default function MyStocks() {
   const [stocks, setStocks] = useState<StockSummary[]>([]);
-  const [loadingTicker, setLoadingTicker] = useState<string | null>(null);
+  const [loadingSymbol, setLoadingSymbol] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,23 +22,26 @@ export default function MyStocks() {
       return;
     }
 
-    fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    fetch(
+      "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
       .then((res) => res.json())
       .then((data) => {
-        if (data && Array.isArray(data.tickers)) {
-          setStocks(data.tickers.map((ticker: string) => ({ ticker })));
+        if (Array.isArray(data)) {
+          setStocks(data);
         } else {
-          console.warn("Unexpected portfolio format:", data);
+          console.warn("Unexpected summary format:", data);
         }
       })
       .catch(console.error);
   }, [router]);
 
-  const handleRemove = async (ticker: string) => {
+  const handleRemove = async (symbol: string) => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       router.push("/");
@@ -53,7 +57,7 @@ export default function MyStocks() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ ticker }),
+          body: JSON.stringify({ ticker: symbol }),
         }
       );
 
@@ -63,25 +67,24 @@ export default function MyStocks() {
         return;
       }
 
-      setStocks((prev) => prev.filter((stock) => stock.ticker !== ticker));
+      setStocks((prev) => prev.filter((stock) => stock.symbol !== symbol));
     } catch (err) {
       console.error("Error removing stock:", err);
       alert("An error occurred while removing the stock.");
     }
   };
 
-  const handleRefresh = async (ticker: string) => {
+  const handleRefresh = async (symbol: string) => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       router.push("/");
       return;
     }
 
-    setLoadingTicker(ticker);
-
+    setLoadingSymbol(symbol);
     try {
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary?ticker=${ticker}`,
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -89,25 +92,23 @@ export default function MyStocks() {
         }
       );
 
-      const data = await res.json();
-      const updatedStock = data.summary;
-
-      if (!updatedStock || updatedStock.error) {
-        alert(`Error fetching ${ticker}: ${updatedStock?.error || "Unknown"}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(`Failed to refresh stock: ${errorData.detail || "Unknown error"}`);
+        setLoadingSymbol(null);
         return;
       }
 
+      const updatedStock: StockSummary = await res.json();
+
       setStocks((prev) =>
-        prev.map((stock) =>
-          stock.ticker === ticker ? { ...stock, ...updatedStock } : stock
-        )
+        prev.map((stock) => (stock.symbol === symbol ? updatedStock : stock))
       );
     } catch (err) {
-      console.error(err);
-      alert("Failed to refresh stock.");
-    } finally {
-      setLoadingTicker(null);
+      console.error("Error refreshing stock:", err);
+      alert("An error occurred while refreshing the stock.");
     }
+    setLoadingSymbol(null);
   };
 
   return (
@@ -139,9 +140,9 @@ export default function MyStocks() {
         }}
       >
         {stocks.length === 0 && <p>No stocks in your portfolio.</p>}
-        {stocks.map(({ ticker, price, change_percent, country }) => (
+        {stocks.map(({ symbol, name, price, change_percent, country }) => (
           <div
-            key={ticker}
+            key={symbol}
             style={{
               border: "1px solid #ccc",
               borderRadius: "10px",
@@ -150,37 +151,51 @@ export default function MyStocks() {
               position: "relative",
             }}
           >
-            <h3 style={{ margin: "0 0 0.5rem 0" }}>{ticker}</h3>
-            <button
-              onClick={() => handleRefresh(ticker)}
-              disabled={loadingTicker === ticker}
+            {/* Symbol and refresh button container */}
+            <div
               style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                fontSize: "0.8rem",
-                background: "#3498db",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                padding: "0.3rem 0.6rem",
-                cursor: loadingTicker === ticker ? "not-allowed" : "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "0.5rem",
               }}
             >
-              {loadingTicker === ticker ? "Refreshing..." : "Refresh"}
-            </button>
+              <h3 style={{ margin: 0 }}>{symbol}</h3>
+              <button
+                onClick={() => handleRefresh(symbol)}
+                disabled={loadingSymbol === symbol}
+                title="Refresh stock data"
+                style={{
+                  fontSize: "0.8rem",
+                  padding: "0.15rem 0.5rem",
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                  border: "1px solid #0070f3",
+                  backgroundColor:
+                    loadingSymbol === symbol ? "#cce4ff" : "white",
+                  color: "#0070f3",
+                }}
+              >
+                {loadingSymbol === symbol ? "Loading..." : "Refresh"}
+              </button>
+            </div>
+
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Price:</strong> {price ?? "N/A"}
+              <strong>Company:</strong> {name || "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Price:</strong> {price?.toFixed(2) || "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
               <strong>Change:</strong> {change_percent ?? "N/A"}
             </p>
-            {country && (
-              <p style={{ margin: "0.3rem 0" }}>
-                <strong>Country:</strong> {country}
-              </p>
-            )}
-            <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Country:</strong> {country ?? "N/A"}
+            </p>
+
+            <div
+              style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}
+            >
               <button
                 style={{
                   flex: 1,
@@ -191,7 +206,7 @@ export default function MyStocks() {
                   color: "white",
                   borderRadius: "5px",
                 }}
-                onClick={() => handleRemove(ticker)}
+                onClick={() => handleRemove(symbol)}
               >
                 Remove
               </button>
