@@ -62,7 +62,7 @@ export default function MyStocks() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ ticker: symbol }),
+          body: JSON.stringify({ stock_symbol: symbol }),
         }
       );
 

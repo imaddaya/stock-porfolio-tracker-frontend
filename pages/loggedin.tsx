@@ -289,7 +289,7 @@ export default function LoggedIn() {
                             "Content-Type": "application/json",
                             Authorization: `Bearer ${token}`,
                           },
-                          body: JSON.stringify({ ticker: symbol }),
+                          body: JSON.stringify({ stock_symbol: symbol }),
                         });
 
                         if (!res.ok) {
