@@ -3,11 +3,16 @@ import { useRouter } from "next/router";
 
 type StockSummary = {
   symbol: string;
-  name: string;
-  price?: number;
-  change_percent?: string;
-  country?: string;
-  error?: string;
+  name: string;           
+  open?: number;                     
+  high?: number;                      
+  low?: number;    
+  price?: number;     
+  volume?: number;                     
+  latest_trading_day?: string;        
+  previous_close?: number;         
+  change?: number;                   
+  change_percent?: string; 
 };
 
 export default function MyStocks() {
@@ -140,7 +145,8 @@ export default function MyStocks() {
         }}
       >
         {stocks.length === 0 && <p>No stocks in your portfolio.</p>}
-        {stocks.map(({ symbol, name, price, change_percent, country }) => (
+        {stocks.map(({ symbol, name, price, change_percent, open, high, low, volume, latest_trading_day, previous_close, change }) => (
+
           <div
             key={symbol}
             style={{
@@ -184,13 +190,31 @@ export default function MyStocks() {
               <strong>Company:</strong> {name || "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Price:</strong> {price?.toFixed(2) || "N/A"}
+              <strong>Open:</strong> {typeof open === "number" ? open.toFixed(2) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Change:</strong> {change_percent ?? "N/A"}
+              <strong>High:</strong> {typeof high === "number" ? high.toFixed(2) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Country:</strong> {country ?? "N/A"}
+              <strong>Low:</strong> {typeof low === "number" ? low.toFixed(2) : "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Price:</strong> {typeof price === "number" ? price.toFixed(2) : "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Volume:</strong> {typeof volume === "number" ? volume.toLocaleString() : "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Latest Trading Day:</strong> {latest_trading_day || "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Previous Close:</strong> {typeof previous_close === "number" ? previous_close.toFixed(2) : "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Change:</strong> {typeof change === "number" ? change.toFixed(2) : "N/A"}
+            </p>
+            <p style={{ margin: "0.3rem 0" }}>
+              <strong>Change Percent:</strong> {change_percent ?? "N/A"}
             </p>
 
             <div
