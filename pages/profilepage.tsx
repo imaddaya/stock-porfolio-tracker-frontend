@@ -210,69 +210,96 @@ export default function ProfilePage() {
       </div>
 
       {/* Email Reminder Time */}
-      <div style={{ marginBottom: "2rem", padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}>
-        <label style={{ fontWeight: "bold", display: "block", marginBottom: "0.5rem" }}>
-          Daily Email Reminder:
-        </label>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
-            <input
-              type="checkbox"
-              checked={emailReminderEnabled}
-              onChange={(e) => setEmailReminderEnabled(e.target.checked)}
-              style={{ transform: "scale(1.2)" }}
-            />
-            <span>Enable daily email with my stocks info</span>
+      <div style={{ 
+        marginBottom: "2rem", 
+        padding: "1rem", 
+        border: "1px solid #ddd", 
+        borderRadius: "8px",
+        backgroundColor: emailReminderEnabled ? "white" : "#f5f5f5",
+        opacity: emailReminderEnabled ? 1 : 0.6
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+          <label style={{ fontWeight: "bold", color: emailReminderEnabled ? "black" : "#999" }}>
+            Daily Email Reminder:
           </label>
-        </div>
-        {emailReminderEnabled && (
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <label style={{ fontSize: "0.9rem", color: "#666" }}>Time:</label>
-            <input
-              type="time"
-              value={emailReminderTime}
-              onChange={(e) => setEmailReminderTime(e.target.value)}
+          
+          {/* Custom On/Off Switch */}
+          <div
+            onClick={() => setEmailReminderEnabled(!emailReminderEnabled)}
+            style={{
+              position: "relative",
+              width: "60px",
+              height: "30px",
+              backgroundColor: emailReminderEnabled ? "#4CAF50" : "#ccc",
+              borderRadius: "15px",
+              cursor: "pointer",
+              transition: "background-color 0.3s",
+            }}
+          >
+            <div
               style={{
-                padding: "0.5rem",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                fontSize: "1rem",
+                position: "absolute",
+                top: "3px",
+                left: emailReminderEnabled ? "33px" : "3px",
+                width: "24px",
+                height: "24px",
+                backgroundColor: "white",
+                borderRadius: "50%",
+                transition: "left 0.3s",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
               }}
             />
-            <button
-              onClick={handleSetEmailReminder}
-              disabled={loading || !emailReminderTime}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: loading ? "not-allowed" : "pointer",
-                fontSize: "1rem",
-              }}
-            >
-              {loading ? "Setting..." : "Update"}
-            </button>
           </div>
-        )}
-        {!emailReminderEnabled && (
+        </div>
+        
+        <div style={{ marginBottom: "1rem" }}>
+          <span style={{ 
+            fontSize: "0.9rem", 
+            color: emailReminderEnabled ? "#666" : "#999",
+            fontStyle: "italic"
+          }}>
+            {emailReminderEnabled ? "Receive daily email with your stocks information" : "Email reminders are disabled"}
+          </span>
+        </div>
+        
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <label style={{ 
+            fontSize: "0.9rem", 
+            color: emailReminderEnabled ? "#666" : "#999" 
+          }}>
+            Time:
+          </label>
+          <input
+            type="time"
+            value={emailReminderTime}
+            onChange={(e) => setEmailReminderTime(e.target.value)}
+            disabled={!emailReminderEnabled}
+            style={{
+              padding: "0.5rem",
+              border: emailReminderEnabled ? "1px solid #ccc" : "1px solid #ddd",
+              borderRadius: "4px",
+              fontSize: "1rem",
+              backgroundColor: emailReminderEnabled ? "white" : "#f5f5f5",
+              color: emailReminderEnabled ? "black" : "#999",
+              cursor: emailReminderEnabled ? "text" : "not-allowed",
+            }}
+          />
           <button
             onClick={handleSetEmailReminder}
-            disabled={loading}
+            disabled={loading || !emailReminderEnabled || !emailReminderTime}
             style={{
               padding: "0.5rem 1rem",
-              backgroundColor: "#6c757d",
+              backgroundColor: emailReminderEnabled && emailReminderTime ? "#007bff" : "#ccc",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: (loading || !emailReminderEnabled || !emailReminderTime) ? "not-allowed" : "pointer",
               fontSize: "1rem",
             }}
           >
-            {loading ? "Updating..." : "Disable Reminder"}
+            {loading ? "Updating..." : "Save Time"}
           </button>
-        )}
+        </div>
       </div>
 
       {/* API Key */}
