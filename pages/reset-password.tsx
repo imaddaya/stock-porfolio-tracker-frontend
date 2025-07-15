@@ -10,6 +10,18 @@ export default function ResetPassword() {
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const getPasswordValidation = () => {
+    return {
+      minLength: newPassword.length >= 8,
+      hasUppercase: /[A-Z]/.test(newPassword),
+      hasLowercase: /[a-z]/.test(newPassword),
+      hasNumber: /\d/.test(newPassword),
+      hasSpecial: /[!@#$%^&*]/.test(newPassword),
+    };
+  };
+
+  const validation = getPasswordValidation();
+
   useEffect(() => {
     if (!router.isReady) return;
     
@@ -84,18 +96,28 @@ export default function ResetPassword() {
       <ul
         style={{
           fontSize: "0.8rem",
-          color: "gray",
           textAlign: "left",
           maxWidth: "300px",
           margin: "0 auto",
           paddingLeft: "1.2rem",
+          listStyleType: "none",
         }}
       >
-        <li>At least 8 characters</li>
-        <li>At least one uppercase letter</li>
-        <li>At least one lowercase letter</li>
-        <li>At least one number</li>
-        <li>At least one special character (!@#$%^&*)</li>
+        <li style={{ color: validation.minLength ? "#28a745" : "#dc3545", marginBottom: "0.2rem" }}>
+          {validation.minLength ? "✓" : "✗"} At least 8 characters
+        </li>
+        <li style={{ color: validation.hasUppercase ? "#28a745" : "#dc3545", marginBottom: "0.2rem" }}>
+          {validation.hasUppercase ? "✓" : "✗"} At least one uppercase letter
+        </li>
+        <li style={{ color: validation.hasLowercase ? "#28a745" : "#dc3545", marginBottom: "0.2rem" }}>
+          {validation.hasLowercase ? "✓" : "✗"} At least one lowercase letter
+        </li>
+        <li style={{ color: validation.hasNumber ? "#28a745" : "#dc3545", marginBottom: "0.2rem" }}>
+          {validation.hasNumber ? "✓" : "✗"} At least one number
+        </li>
+        <li style={{ color: validation.hasSpecial ? "#28a745" : "#dc3545", marginBottom: "0.2rem" }}>
+          {validation.hasSpecial ? "✓" : "✗"} At least one special character (!@#$%^&*)
+        </li>
       </ul>
       <input
         type="password"

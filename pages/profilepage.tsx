@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 export default function ProfilePage() {
   const [userEmail, setUserEmail] = useState("");
   const [emailReminderTime, setEmailReminderTime] = useState("");
+  const [emailReminderEnabled, setEmailReminderEnabled] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +13,7 @@ export default function ProfilePage() {
   const [isEditingApiKey, setIsEditingApiKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showApiWarning, setShowApiWarning] = useState(false);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -46,6 +48,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setApiKey(data.alpha_vantage_api_key || "");
         setEmailReminderTime(data.email_reminder_time || "");
+        setEmailReminderEnabled(data.email_reminder_enabled || false);
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -54,7 +57,7 @@ export default function ProfilePage() {
 
   const handleSetEmailReminder = async () => {
     const token = localStorage.getItem("access_token");
-    if (!token || !emailReminderTime) return;
+    if (!token) return;
 
     setLoading(true);
     try {
@@ -66,18 +69,21 @@ export default function ProfilePage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ reminder_time: emailReminderTime }),
+          body: JSON.stringify({ 
+            reminder_time: emailReminderEnabled ? emailReminderTime : null,
+            enabled: emailReminderEnabled 
+          }),
         }
       );
 
       if (res.ok) {
-        setStatus("Email reminder set successfully!");
+        setStatus(emailReminderEnabled ? "Daily email reminder enabled!" : "Email reminder disabled!");
       } else {
         const data = await res.json();
-        setStatus(data.detail || "Failed to set email reminder");
+        setStatus(data.detail || "Failed to update email reminder");
       }
     } catch (err) {
-      setStatus("Error setting email reminder");
+      setStatus("Error updating email reminder");
     }
     setLoading(false);
   };
@@ -135,9 +141,9 @@ export default function ProfilePage() {
       );
 
       const data = await response.json();
-      setStatus(data.message || "Check your email for password reset instructions.");
+      setStatus("If your email is registered and verified, you'll receive password reset instructions.");
     } catch (error) {
-      setStatus("Something went wrong.");
+      setStatus("If your email is registered and verified, you'll receive password reset instructions.");
     }
     setLoading(false);
   };
@@ -204,26 +210,57 @@ export default function ProfilePage() {
       {/* Email Reminder Time */}
       <div style={{ marginBottom: "2rem", padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}>
         <label style={{ fontWeight: "bold", display: "block", marginBottom: "0.5rem" }}>
-          Daily Email Reminder Time:
+          Daily Email Reminder:
         </label>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <input
-            type="time"
-            value={emailReminderTime}
-            onChange={(e) => setEmailReminderTime(e.target.value)}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              fontSize: "1rem",
-            }}
-          />
+        <div style={{ marginBottom: "1rem" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={emailReminderEnabled}
+              onChange={(e) => setEmailReminderEnabled(e.target.checked)}
+              style={{ transform: "scale(1.2)" }}
+            />
+            <span>Enable daily email with my stocks info</span>
+          </label>
+        </div>
+        {emailReminderEnabled && (
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <label style={{ fontSize: "0.9rem", color: "#666" }}>Time:</label>
+            <input
+              type="time"
+              value={emailReminderTime}
+              onChange={(e) => setEmailReminderTime(e.target.value)}
+              style={{
+                padding: "0.5rem",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                fontSize: "1rem",
+              }}
+            />
+            <button
+              onClick={handleSetEmailReminder}
+              disabled={loading || !emailReminderTime}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: loading ? "not-allowed" : "pointer",
+                fontSize: "1rem",
+              }}
+            >
+              {loading ? "Setting..." : "Update"}
+            </button>
+          </div>
+        )}
+        {!emailReminderEnabled && (
           <button
             onClick={handleSetEmailReminder}
-            disabled={loading || !emailReminderTime}
+            disabled={loading}
             style={{
               padding: "0.5rem 1rem",
-              backgroundColor: "#007bff",
+              backgroundColor: "#6c757d",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -231,9 +268,9 @@ export default function ProfilePage() {
               fontSize: "1rem",
             }}
           >
-            {loading ? "Setting..." : "Set"}
+            {loading ? "Updating..." : "Disable Reminder"}
           </button>
-        </div>
+        )}
       </div>
 
       {/* API Key */}
@@ -329,16 +366,59 @@ export default function ProfilePage() {
             >
               Upgrade API Key
             </button>
-            <span
-              title="⚠️ Creating multiple API keys from the same location may cause an IP ban. Only change when upgrading your key. This can be done once per week to prevent spamming."
-              style={{
-                fontSize: "1.2rem",
-                cursor: "help",
-                color: "#ffc107",
-              }}
+            <div 
+              style={{ position: "relative", display: "inline-block" }}
+              onMouseEnter={() => setShowApiWarning(true)}
+              onMouseLeave={() => setShowApiWarning(false)}
             >
-              ⚠️
-            </span>
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  cursor: "help",
+                  color: "#dc3545",
+                }}
+              >
+                ⚠️
+              </span>
+              {showApiWarning && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "130%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    backgroundColor: "#333",
+                    color: "white",
+                    padding: "0.8rem",
+                    borderRadius: "6px",
+                    fontSize: "0.8rem",
+                    maxWidth: "250px",
+                    zIndex: 1000,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <div style={{ color: "#ff6b6b", fontWeight: "bold", marginBottom: "0.3rem" }}>
+                    ⚠️ WARNING
+                  </div>
+                  <div style={{ color: "#ff6b6b" }}>
+                    Creating multiple API keys from the same location will cause an IP ban. Change API only when upgrading the key. This can be done once/week.
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 0,
+                      height: 0,
+                      borderLeft: "6px solid transparent",
+                      borderRight: "6px solid transparent",
+                      borderTop: "6px solid #333",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -378,10 +458,21 @@ export default function ProfilePage() {
             borderRadius: "4px",
             cursor: loading ? "not-allowed" : "pointer",
             fontSize: "0.9rem",
+            marginBottom: "0.5rem",
           }}
         >
           {loading ? "Sending..." : "Change Password"}
         </button>
+        {(loading || status.includes("password reset")) && (
+          <div style={{ 
+            fontSize: "0.9rem", 
+            color: "#28a745", 
+            fontStyle: "italic",
+            marginTop: "0.5rem"
+          }}>
+            If your email is registered and verified, you'll receive password reset instructions.
+          </div>
+        )}
       </div>
 
       {/* Delete Account */}
@@ -444,21 +535,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Status Messages */}
-      {status && (
-        <div
-          style={{
-            padding: "1rem",
-            marginTop: "1rem",
-            borderRadius: "4px",
-            backgroundColor: status.includes("Error") || status.includes("Failed") ? "#f8d7da" : "#d4edda",
-            color: status.includes("Error") || status.includes("Failed") ? "#721c24" : "#155724",
-            border: `1px solid ${status.includes("Error") || status.includes("Failed") ? "#f5c6cb" : "#c3e6cb"}`,
-          }}
-        >
-          {status}
-        </div>
-      )}
+      
     </div>
   );
 }
