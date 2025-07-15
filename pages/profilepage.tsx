@@ -204,7 +204,7 @@ export default function ProfilePage() {
       {/* Email Reminder Time */}
       <div style={{ marginBottom: "2rem", padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}>
         <label style={{ fontWeight: "bold", display: "block", marginBottom: "0.5rem" }}>
-          Email Reminder Time:
+          Daily Email Reminder Time:
         </label>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <input
