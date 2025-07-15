@@ -421,9 +421,11 @@ export default function ProfilePage() {
                     padding: "0.8rem",
                     borderRadius: "6px",
                     fontSize: "0.8rem",
-                    maxWidth: "250px",
+                    width: "300px",
+                    maxWidth: "300px",
                     zIndex: 1000,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                    lineHeight: "1.4",
                   }}
                 >
                   <div style={{ color: "#ff6b6b", fontWeight: "bold", marginBottom: "0.3rem" }}>
