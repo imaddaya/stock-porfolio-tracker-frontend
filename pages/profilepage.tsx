@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const [showApiWarning, setShowApiWarning] = useState(false);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPasswordResetMessage, setShowPasswordResetMessage] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export default function ProfilePage() {
     }
 
     setLoading(true);
+    setShowPasswordResetMessage(true);
     try {
       const response = await fetch(
         "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/forgot-password",
@@ -141,9 +143,9 @@ export default function ProfilePage() {
       );
 
       const data = await response.json();
-      setStatus("If your email is registered and verified, you'll receive password reset instructions.");
+      setStatus("Password reset email sent!");
     } catch (error) {
-      setStatus("If your email is registered and verified, you'll receive password reset instructions.");
+      setStatus("Password reset email sent!");
     }
     setLoading(false);
   };
@@ -463,7 +465,7 @@ export default function ProfilePage() {
         >
           {loading ? "Sending..." : "Change Password"}
         </button>
-        {(loading || status.includes("password reset")) && (
+        {showPasswordResetMessage && (
           <div style={{ 
             fontSize: "0.9rem", 
             color: "#28a745", 
