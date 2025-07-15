@@ -55,9 +55,9 @@ export default function MyStocks() {
 
     try {
       const res = await fetch(
-        "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove",
+        "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove/{symbol}",
         {
-          method: "POST",
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -190,16 +190,16 @@ export default function MyStocks() {
               <strong>Company:</strong> {name || "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Open:</strong> {typeof open === "number" ? open.toFixed(2) : "N/A"}
+              <strong>Open:</strong> {typeof open === "number" ? open.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>High:</strong> {typeof high === "number" ? high.toFixed(2) : "N/A"}
+              <strong>High:</strong> {typeof high === "number" ? high.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Low:</strong> {typeof low === "number" ? low.toFixed(2) : "N/A"}
+              <strong>Low:</strong> {typeof low === "number" ? low.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Price:</strong> {typeof price === "number" ? price.toFixed(2) : "N/A"}
+              <strong>Price:</strong> {typeof price === "number" ? price.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
               <strong>Volume:</strong> {typeof volume === "number" ? volume.toLocaleString() : "N/A"}
@@ -208,10 +208,10 @@ export default function MyStocks() {
               <strong>Latest Trading Day:</strong> {latest_trading_day || "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Previous Close:</strong> {typeof previous_close === "number" ? previous_close.toFixed(2) : "N/A"}
+              <strong>Previous Close:</strong> {typeof previous_close === "number" ? previous_close.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
-              <strong>Change:</strong> {typeof change === "number" ? change.toFixed(2) : "N/A"}
+              <strong>Change:</strong> {typeof change === "number" ? change.toFixed(4) : "N/A"}
             </p>
             <p style={{ margin: "0.3rem 0" }}>
               <strong>Change Percent:</strong> {change_percent ?? "N/A"}
