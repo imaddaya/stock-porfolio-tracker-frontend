@@ -184,7 +184,7 @@ export default function LoggedIn() {
                           router.push("/mystocks");
                           break;
                         case "Profile":
-                          router.push("/profile");
+                          router.push("/profilepage");
                           break;
                         case "Email Reminder":
                           router.push("/email-reminder");
