@@ -166,7 +166,7 @@ export default function LoggedIn() {
                   zIndex: 10,
                 }}
               >
-                {["My Stocks", "Profile", "Email Reminder", "Logout"].map((item) => (
+                {["My Stocks", "Profile", "Logout"].map((item) => (
                   <div
                     key={item}
                     style={{
@@ -185,9 +185,6 @@ export default function LoggedIn() {
                           break;
                         case "Profile":
                           router.push("/profilepage");
-                          break;
-                        case "Email Reminder":
-                          router.push("/email-reminder");
                           break;
                         case "Logout":
                           handleLogout();
