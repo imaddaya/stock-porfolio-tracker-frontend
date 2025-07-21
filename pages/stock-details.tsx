@@ -32,6 +32,8 @@ export default function StockDetails() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedWeeklyPoint, setSelectedWeeklyPoint] = useState<StockDataPoint | null>(null);
+  const [selectedMonthlyPoint, setSelectedMonthlyPoint] = useState<StockDataPoint | null>(null);
   const router = useRouter();
   const { symbol } = router.query;
 
@@ -98,7 +100,44 @@ export default function StockDetails() {
     setLoading(false);
   };
 
-  const renderGraph = (data: StockDataPoint[] | undefined, title: string, color: string) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const week = Math.ceil(date.getDate() / 7);
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    return `W${week}-${month.toString().padStart(2, '0')}-${year}`;
+  };
+
+  const getYAxisValues = (data: StockDataPoint[]) => {
+    const allValues = data.flatMap(item => [item.high, item.low, item.close, item.open]);
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const range = maxValue - minValue;
+    const padding = range * 0.1;
+    
+    const adjustedMin = Math.max(0, minValue - padding);
+    const adjustedMax = maxValue + padding;
+    const adjustedRange = adjustedMax - adjustedMin;
+    
+    // Create values in multiples of 10
+    const step = Math.ceil(adjustedRange / 50) * 10; // Approximately 5 grid lines
+    const startValue = Math.floor(adjustedMin / 10) * 10;
+    
+    const values = [];
+    for (let i = startValue; i <= adjustedMax; i += step) {
+      values.push(i);
+    }
+    
+    return { values: values.reverse(), min: adjustedMin, max: adjustedMax };
+  };
+
+  const renderGraph = (
+    data: StockDataPoint[] | undefined, 
+    title: string, 
+    color: string, 
+    selectedPoint: StockDataPoint | null,
+    onPointClick: (point: StockDataPoint) => void
+  ) => {
     if (!data || data.length === 0) {
       return (
         <div style={{ marginBottom: "2rem", textAlign: "center", padding: "2rem", border: "1px solid #ddd", borderRadius: "8px" }}>
@@ -108,13 +147,13 @@ export default function StockDetails() {
       );
     }
 
-    const entries = data.slice(0, 12); // Show last 12 data points
-    const maxValue = Math.max(...entries.map(item => item.high));
-    const minValue = Math.min(...entries.map(item => item.low));
+    const entries = data.slice().reverse(); // Show chronologically
+    const { values: yAxisValues, min: minValue, max: maxValue } = getYAxisValues(entries);
     const range = maxValue - minValue;
+    const graphWidth = Math.max(800, entries.length * 60); // Minimum 800px, 60px per data point
 
     return (
-      <div style={{ marginBottom: "2rem" }}>
+      <div style={{ marginBottom: "3rem" }}>
         <h3 style={{ textAlign: "center", marginBottom: "1rem", color: "#333" }}>{title}</h3>
         <div
           style={{
@@ -122,66 +161,75 @@ export default function StockDetails() {
             borderRadius: "8px",
             padding: "1rem",
             backgroundColor: "#f9f9f9",
-            height: "300px",
-            position: "relative",
+            overflowX: "auto",
+            height: "500px",
           }}
         >
-          <svg width="100%" height="100%" viewBox="0 0 400 250">
+          <svg width={graphWidth} height="450" style={{ minWidth: "100%" }}>
             {/* Grid lines */}
-            {[0, 1, 2, 3, 4].map((i) => (
+            {yAxisValues.map((value, i) => (
               <line
                 key={i}
-                x1="40"
-                y1={50 + i * 40}
-                x2="380"
-                y2={50 + i * 40}
+                x1="60"
+                y1={50 + i * (350 / (yAxisValues.length - 1))}
+                x2={graphWidth - 40}
+                y2={50 + i * (350 / (yAxisValues.length - 1))}
                 stroke="#e0e0e0"
                 strokeWidth="1"
               />
             ))}
             
             {/* Y-axis labels */}
-            {[0, 1, 2, 3, 4].map((i) => (
+            {yAxisValues.map((value, i) => (
               <text
                 key={i}
-                x="35"
-                y={55 + i * 40}
+                x="55"
+                y={55 + i * (350 / (yAxisValues.length - 1))}
                 fill="#666"
-                fontSize="10"
+                fontSize="12"
                 textAnchor="end"
               >
-                {(maxValue - (range * i) / 4).toFixed(2)}
+                ${value.toFixed(0)}
               </text>
             ))}
 
             {/* Data points and lines */}
-            {entries.reverse().map((item, index) => {
-              const x = 60 + (index * 300) / (entries.length - 1);
+            {entries.map((item, index) => {
+              const x = 80 + (index * (graphWidth - 120)) / (entries.length - 1);
               const closePrice = item.close;
-              const y = 50 + ((maxValue - closePrice) / range) * 160;
+              const y = 50 + ((maxValue - closePrice) / range) * 350;
               
               return (
                 <g key={item.date}>
-                  <circle cx={x} cy={y} r="3" fill={color} />
+                  <circle 
+                    cx={x} 
+                    cy={y} 
+                    r="6" 
+                    fill={selectedPoint?.date === item.date ? "#ff6b6b" : color}
+                    stroke="white"
+                    strokeWidth="2"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => onPointClick(item)}
+                  />
                   {index > 0 && (
                     <line
-                      x1={60 + ((index - 1) * 300) / (entries.length - 1)}
-                      y1={50 + ((maxValue - entries[index - 1].close) / range) * 160}
+                      x1={80 + ((index - 1) * (graphWidth - 120)) / (entries.length - 1)}
+                      y1={50 + ((maxValue - entries[index - 1].close) / range) * 350}
                       x2={x}
                       y2={y}
                       stroke={color}
-                      strokeWidth="2"
+                      strokeWidth="3"
                     />
                   )}
                   <text
                     x={x}
-                    y="240"
+                    y="425"
                     fill="#666"
-                    fontSize="8"
+                    fontSize="10"
                     textAnchor="middle"
-                    transform={`rotate(-45, ${x}, 240)`}
+                    transform={`rotate(-45, ${x}, 425)`}
                   >
-                    {item.date.slice(5)}
+                    {formatDate(item.date)}
                   </text>
                 </g>
               );
@@ -189,27 +237,30 @@ export default function StockDetails() {
           </svg>
         </div>
         
-        {/* Data table */}
-        <div style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-            <div>Date</div>
-            <div>Open</div>
-            <div>High</div>
-            <div>Low</div>
-            <div>Close</div>
-            <div>Volume</div>
-          </div>
-          {data.slice(0, 5).map((item) => (
-            <div key={item.date} style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid #eee" }}>
-              <div>{item.date}</div>
-              <div>${item.open.toFixed(2)}</div>
-              <div>${item.high.toFixed(2)}</div>
-              <div>${item.low.toFixed(2)}</div>
-              <div>${item.close.toFixed(2)}</div>
-              <div>{item.volume.toLocaleString()}</div>
+        {/* Selected point details */}
+        {selectedPoint && (
+          <div style={{ 
+            marginTop: "1rem", 
+            padding: "1rem", 
+            backgroundColor: "#fff", 
+            border: "1px solid #ddd", 
+            borderRadius: "8px" 
+          }}>
+            <h4 style={{ marginBottom: "0.5rem", color: "#333" }}>
+              Details for {formatDate(selectedPoint.date)}
+            </h4>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.5rem", fontSize: "0.9rem" }}>
+              <div><strong>Date:</strong> {selectedPoint.date}</div>
+              <div><strong>Open:</strong> ${selectedPoint.open.toFixed(4)}</div>
+              <div><strong>High:</strong> ${selectedPoint.high.toFixed(4)}</div>
+              <div><strong>Low:</strong> ${selectedPoint.low.toFixed(4)}</div>
+              <div><strong>Close:</strong> ${selectedPoint.close.toFixed(4)}</div>
+              <div><strong>Adjusted Close:</strong> ${selectedPoint.adjusted_close.toFixed(4)}</div>
+              <div><strong>Volume:</strong> {selectedPoint.volume.toLocaleString()}</div>
+              <div><strong>Dividend:</strong> ${selectedPoint.dividend_amount.toFixed(4)}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -279,16 +330,25 @@ export default function StockDetails() {
         {stockName || displaySymbol} ({displaySymbol})
       </h1>
 
-      {/* Graphs container */}
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-          <div>
-            {renderGraph(weeklyData?.weekly_data, "Weekly Data", "#0070f3")}
-          </div>
-          <div>
-            {renderGraph(monthlyData?.weekly_data, "Monthly Data", "#28a745")}
-          </div>
-        </div>
+      {/* Graphs container - vertical layout */}
+      <div style={{ maxWidth: "100%", margin: "0 auto" }}>
+        {/* Weekly graph first */}
+        {renderGraph(
+          weeklyData?.weekly_data, 
+          "Weekly Data", 
+          "#0070f3",
+          selectedWeeklyPoint,
+          setSelectedWeeklyPoint
+        )}
+        
+        {/* Monthly graph second */}
+        {renderGraph(
+          monthlyData?.weekly_data, 
+          "Monthly Data", 
+          "#28a745",
+          selectedMonthlyPoint,
+          setSelectedMonthlyPoint
+        )}
       </div>
     </div>
   );
