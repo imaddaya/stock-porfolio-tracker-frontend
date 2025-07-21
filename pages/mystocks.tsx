@@ -185,8 +185,7 @@ export default function MyStocks() {
                 </button>
                 <button
                   onClick={() => {
-                    // TODO: Add details functionality
-                    console.log(`Details for ${symbol}`);
+                    router.push(`/stock-details?symbol=${symbol}`);
                   }}
                   title="View stock details"
                   style={{
