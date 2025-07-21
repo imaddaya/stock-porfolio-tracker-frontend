@@ -155,7 +155,7 @@ export default function MyStocks() {
               position: "relative",
             }}
           >
-            {/* Symbol and refresh button container */}
+            {/* Symbol and buttons container */}
             <div
               style={{
                 display: "flex",
@@ -165,23 +165,43 @@ export default function MyStocks() {
               }}
             >
               <h3 style={{ margin: 0 }}>{symbol}</h3>
-              <button
-                onClick={() => handleRefresh(symbol)}
-                disabled={loadingSymbol === symbol}
-                title="Refresh stock data"
-                style={{
-                  fontSize: "0.8rem",
-                  padding: "0.15rem 0.5rem",
-                  cursor: "pointer",
-                  borderRadius: "4px",
-                  border: "1px solid #0070f3",
-                  backgroundColor:
-                    loadingSymbol === symbol ? "#cce4ff" : "white",
-                  color: "#0070f3",
-                }}
-              >
-                {loadingSymbol === symbol ? "Loading..." : "Refresh"}
-              </button>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  onClick={() => handleRefresh(symbol)}
+                  disabled={loadingSymbol === symbol}
+                  title="Refresh stock data"
+                  style={{
+                    fontSize: "0.8rem",
+                    padding: "0.15rem 0.5rem",
+                    cursor: "pointer",
+                    borderRadius: "4px",
+                    border: "1px solid #0070f3",
+                    backgroundColor:
+                      loadingSymbol === symbol ? "#cce4ff" : "white",
+                    color: "#0070f3",
+                  }}
+                >
+                  {loadingSymbol === symbol ? "Loading..." : "Refresh"}
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Add details functionality
+                    console.log(`Details for ${symbol}`);
+                  }}
+                  title="View stock details"
+                  style={{
+                    fontSize: "0.8rem",
+                    padding: "0.15rem 0.5rem",
+                    cursor: "pointer",
+                    borderRadius: "4px",
+                    border: "1px solid #28a745",
+                    backgroundColor: "white",
+                    color: "#28a745",
+                  }}
+                >
+                  Details
+                </button>
+              </div>
             </div>
 
             <p style={{ margin: "0.3rem 0" }}>
