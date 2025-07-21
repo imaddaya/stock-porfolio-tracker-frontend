@@ -53,7 +53,7 @@ export default function StockDetails() {
       
       // Fetch weekly data
       const weeklyRes = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/weekly-data/${symbol}`,
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/weekly-data/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ export default function StockDetails() {
 
       // Fetch monthly data
       const monthlyRes = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/monthly-data/${symbol}`,
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/monthly-data/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
