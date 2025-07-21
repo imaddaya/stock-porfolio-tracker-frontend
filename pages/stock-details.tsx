@@ -2,15 +2,34 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
+type StockDataPoint = {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  adjusted_close: number;
+  volume: number;
+  dividend_amount: number;
+};
+
 type StockDetails = {
   symbol: string;
   name: string;
-  weekly_data?: { [key: string]: { open: string; high: string; low: string; close: string; volume: string } };
-  monthly_data?: { [key: string]: { open: string; high: string; low: string; close: string; volume: string } };
+  metadata?: any;
+  weekly_data?: StockDataPoint[];
+};
+
+type MonthlyData = {
+  symbol: string;
+  name: string;
+  metadata?: any;
+  weekly_data?: StockDataPoint[]; // Note: backend uses same field name for monthly data
 };
 
 export default function StockDetails() {
-  const [stockData, setStockData] = useState<StockDetails | null>(null);
+  const [weeklyData, setWeeklyData] = useState<StockDetails | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -31,8 +50,10 @@ export default function StockDetails() {
   const fetchStockDetails = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/details/${symbol}`,
+      
+      // Fetch weekly data
+      const weeklyRes = await fetch(
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/weekly-data/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -40,15 +61,36 @@ export default function StockDetails() {
         }
       );
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        setError(`Failed to fetch stock details: ${errorData.detail || "Unknown error"}`);
+      // Fetch monthly data
+      const monthlyRes = await fetch(
+        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks/monthly-data/${symbol}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!weeklyRes.ok && !monthlyRes.ok) {
+        const weeklyError = await weeklyRes.json().catch(() => ({ detail: "Unknown error" }));
+        const monthlyError = await monthlyRes.json().catch(() => ({ detail: "Unknown error" }));
+        setError(`Failed to fetch stock data: ${weeklyError.detail || monthlyError.detail}`);
         setLoading(false);
         return;
       }
 
-      const data = await res.json();
-      setStockData(data);
+      // Process weekly data
+      if (weeklyRes.ok) {
+        const weeklyResult = await weeklyRes.json();
+        setWeeklyData(weeklyResult);
+      }
+
+      // Process monthly data
+      if (monthlyRes.ok) {
+        const monthlyResult = await monthlyRes.json();
+        setMonthlyData(monthlyResult);
+      }
+
     } catch (err) {
       console.error("Error fetching stock details:", err);
       setError("An error occurred while fetching stock details.");
@@ -56,12 +98,19 @@ export default function StockDetails() {
     setLoading(false);
   };
 
-  const renderGraph = (data: any, title: string, color: string) => {
-    if (!data) return <div style={{ color: "#666" }}>No data available</div>;
+  const renderGraph = (data: StockDataPoint[] | undefined, title: string, color: string) => {
+    if (!data || data.length === 0) {
+      return (
+        <div style={{ marginBottom: "2rem", textAlign: "center", padding: "2rem", border: "1px solid #ddd", borderRadius: "8px" }}>
+          <h3 style={{ marginBottom: "1rem", color: "#333" }}>{title}</h3>
+          <div style={{ color: "#666" }}>No data available</div>
+        </div>
+      );
+    }
 
-    const entries = Object.entries(data).slice(0, 10); // Show last 10 data points
-    const maxValue = Math.max(...entries.map(([_, values]: any) => parseFloat(values.high)));
-    const minValue = Math.min(...entries.map(([_, values]: any) => parseFloat(values.low)));
+    const entries = data.slice(0, 12); // Show last 12 data points
+    const maxValue = Math.max(...entries.map(item => item.high));
+    const minValue = Math.min(...entries.map(item => item.low));
     const range = maxValue - minValue;
 
     return (
@@ -106,18 +155,18 @@ export default function StockDetails() {
             ))}
 
             {/* Data points and lines */}
-            {entries.map(([date, values]: any, index) => {
+            {entries.reverse().map((item, index) => {
               const x = 60 + (index * 300) / (entries.length - 1);
-              const closePrice = parseFloat(values.close);
+              const closePrice = item.close;
               const y = 50 + ((maxValue - closePrice) / range) * 160;
               
               return (
-                <g key={date}>
+                <g key={item.date}>
                   <circle cx={x} cy={y} r="3" fill={color} />
                   {index > 0 && (
                     <line
                       x1={60 + ((index - 1) * 300) / (entries.length - 1)}
-                      y1={50 + ((maxValue - parseFloat(entries[index - 1][1].close)) / range) * 160}
+                      y1={50 + ((maxValue - entries[index - 1].close) / range) * 160}
                       x2={x}
                       y2={y}
                       stroke={color}
@@ -132,7 +181,7 @@ export default function StockDetails() {
                     textAnchor="middle"
                     transform={`rotate(-45, ${x}, 240)`}
                   >
-                    {date.slice(5)}
+                    {item.date.slice(5)}
                   </text>
                 </g>
               );
@@ -142,20 +191,22 @@ export default function StockDetails() {
         
         {/* Data table */}
         <div style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
             <div>Date</div>
             <div>Open</div>
             <div>High</div>
             <div>Low</div>
             <div>Close</div>
+            <div>Volume</div>
           </div>
-          {entries.slice(0, 5).map(([date, values]: any) => (
-            <div key={date} style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid #eee" }}>
-              <div>{date}</div>
-              <div>${parseFloat(values.open).toFixed(2)}</div>
-              <div>${parseFloat(values.high).toFixed(2)}</div>
-              <div>${parseFloat(values.low).toFixed(2)}</div>
-              <div>${parseFloat(values.close).toFixed(2)}</div>
+          {data.slice(0, 5).map((item) => (
+            <div key={item.date} style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid #eee" }}>
+              <div>{item.date}</div>
+              <div>${item.open.toFixed(2)}</div>
+              <div>${item.high.toFixed(2)}</div>
+              <div>${item.low.toFixed(2)}</div>
+              <div>${item.close.toFixed(2)}</div>
+              <div>{item.volume.toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -199,6 +250,9 @@ export default function StockDetails() {
     );
   }
 
+  const stockName = weeklyData?.name || monthlyData?.name;
+  const displaySymbol = weeklyData?.symbol || monthlyData?.symbol || symbol;
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", padding: "2rem" }}>
       {/* Back button */}
@@ -222,17 +276,17 @@ export default function StockDetails() {
 
       {/* Stock name header */}
       <h1 style={{ textAlign: "center", marginBottom: "2rem", color: "#333" }}>
-        {stockData?.name || stockData?.symbol || symbol} ({symbol})
+        {stockName || displaySymbol} ({displaySymbol})
       </h1>
 
       {/* Graphs container */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
           <div>
-            {renderGraph(stockData?.weekly_data, "Weekly Data", "#0070f3")}
+            {renderGraph(weeklyData?.weekly_data, "Weekly Data", "#0070f3")}
           </div>
           <div>
-            {renderGraph(stockData?.monthly_data, "Monthly Data", "#28a745")}
+            {renderGraph(monthlyData?.weekly_data, "Monthly Data", "#28a745")}
           </div>
         </div>
       </div>
