@@ -15,9 +15,16 @@ type StockSummary = {
   change_percent?: string; 
 };
 
+type PortfolioEntry = {
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+};
+
 export default function MyStocks() {
   const [stocks, setStocks] = useState<StockSummary[]>([]);
   const [loadingSymbol, setLoadingSymbol] = useState<string | null>(null);
+  const [portfolioEntries, setPortfolioEntries] = useState<{ [symbol: string]: PortfolioEntry }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -25,6 +32,12 @@ export default function MyStocks() {
     if (!token) {
       router.push("/");
       return;
+    }
+
+    // Load portfolio entries from localStorage
+    const savedEntries = localStorage.getItem("portfolioEntries");
+    if (savedEntries) {
+      setPortfolioEntries(JSON.parse(savedEntries));
     }
 
     fetch(
@@ -112,6 +125,31 @@ export default function MyStocks() {
       alert("An error occurred while refreshing the stock.");
     }
     setLoadingSymbol(null);
+  };
+
+  const updatePortfolioEntry = (symbol: string, field: 'quantity' | 'purchasePrice', value: number) => {
+    const newEntries = {
+      ...portfolioEntries,
+      [symbol]: {
+        ...portfolioEntries[symbol],
+        symbol,
+        quantity: field === 'quantity' ? value : (portfolioEntries[symbol]?.quantity || 0),
+        purchasePrice: field === 'purchasePrice' ? value : (portfolioEntries[symbol]?.purchasePrice || 0),
+      }
+    };
+    setPortfolioEntries(newEntries);
+    localStorage.setItem("portfolioEntries", JSON.stringify(newEntries));
+  };
+
+  const calculateProfit = (stock: StockSummary) => {
+    const entry = portfolioEntries[stock.symbol];
+    if (!entry || !stock.price || entry.quantity <= 0 || entry.purchasePrice <= 0) {
+      return null;
+    }
+    
+    const totalPurchaseValue = entry.quantity * entry.purchasePrice;
+    const totalCurrentValue = entry.quantity * stock.price;
+    return totalCurrentValue - totalPurchaseValue;
   };
 
   return (
@@ -233,6 +271,93 @@ export default function MyStocks() {
             <p style={{ margin: "0.3rem 0" }}>
               <strong>Change Percent:</strong> {change_percent ?? "N/A"}
             </p>
+
+            {/* Portfolio Tracking Section */}
+            <div
+              style={{
+                marginTop: "1rem",
+                padding: "0.75rem",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "6px",
+                border: "1px solid #e9ecef"
+              }}
+            >
+              <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", fontWeight: "bold" }}>
+                My Portfolio
+              </h4>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.85rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <label style={{ minWidth: "80px" }}>Quantity:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={portfolioEntries[symbol]?.quantity || ""}
+                    onChange={(e) => updatePortfolioEntry(symbol, 'quantity', parseFloat(e.target.value) || 0)}
+                    style={{
+                      flex: 1,
+                      padding: "0.25rem",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                      fontSize: "0.8rem"
+                    }}
+                    placeholder="0"
+                  />
+                </div>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <label style={{ minWidth: "80px" }}>Bought at:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={portfolioEntries[symbol]?.purchasePrice || ""}
+                    onChange={(e) => updatePortfolioEntry(symbol, 'purchasePrice', parseFloat(e.target.value) || 0)}
+                    style={{
+                      flex: 1,
+                      padding: "0.25rem",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                      fontSize: "0.8rem"
+                    }}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {(() => {
+                  const profit = calculateProfit({ symbol, name, price, change_percent, open, high, low, volume, latest_trading_day, previous_close, change });
+                  if (profit !== null) {
+                    const isProfit = profit >= 0;
+                    return (
+                      <div 
+                        style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "0.5rem",
+                          padding: "0.25rem",
+                          borderRadius: "4px",
+                          backgroundColor: isProfit ? "#d4edda" : "#f8d7da",
+                          border: `1px solid ${isProfit ? "#c3e6cb" : "#f5c6cb"}`,
+                          color: isProfit ? "#155724" : "#721c24"
+                        }}
+                      >
+                        <label style={{ minWidth: "80px", fontWeight: "bold" }}>
+                          {isProfit ? "Profit:" : "Loss:"}
+                        </label>
+                        <span style={{ fontWeight: "bold" }}>
+                          ${Math.abs(profit).toFixed(2)}
+                        </span>
+                        <span style={{ fontSize: "0.75rem" }}>
+                          ({isProfit ? "+" : "-"}{((Math.abs(profit) / (portfolioEntries[symbol].quantity * portfolioEntries[symbol].purchasePrice)) * 100).toFixed(1)}%)
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
 
             <div
               style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}
