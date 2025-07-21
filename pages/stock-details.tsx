@@ -102,10 +102,10 @@ export default function StockDetails() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const week = Math.ceil(date.getDate() / 7);
+    const day = date.getDate();
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
-    return `W${week}-${month.toString().padStart(2, '0')}-${year}`;
+    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
   };
 
   const getYAxisValues = (data: StockDataPoint[]) => {
@@ -185,8 +185,9 @@ export default function StockDetails() {
                 key={i}
                 x="55"
                 y={55 + i * (350 / (yAxisValues.length - 1))}
-                fill="#666"
-                fontSize="12"
+                fill="#000"
+                fontSize="14"
+                fontWeight="bold"
                 textAnchor="end"
               >
                 ${value.toFixed(0)}
@@ -204,7 +205,7 @@ export default function StockDetails() {
                   <circle 
                     cx={x} 
                     cy={y} 
-                    r="6" 
+                    r="8" 
                     fill={selectedPoint?.date === item.date ? "#ff6b6b" : color}
                     stroke="white"
                     strokeWidth="2"
@@ -224,8 +225,9 @@ export default function StockDetails() {
                   <text
                     x={x}
                     y="425"
-                    fill="#666"
-                    fontSize="10"
+                    fill="#000"
+                    fontSize="12"
+                    fontWeight="bold"
                     textAnchor="middle"
                     transform={`rotate(-45, ${x}, 425)`}
                   >
@@ -246,10 +248,10 @@ export default function StockDetails() {
             border: "1px solid #ddd", 
             borderRadius: "8px" 
           }}>
-            <h4 style={{ marginBottom: "0.5rem", color: "#333" }}>
+            <h4 style={{ marginBottom: "0.5rem", color: "#000" }}>
               Details for {formatDate(selectedPoint.date)}
             </h4>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.5rem", fontSize: "0.9rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.5rem", fontSize: "0.9rem", color: "#000" }}>
               <div><strong>Date:</strong> {selectedPoint.date}</div>
               <div><strong>Open:</strong> ${selectedPoint.open.toFixed(4)}</div>
               <div><strong>High:</strong> ${selectedPoint.high.toFixed(4)}</div>
