@@ -12,7 +12,9 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/login", {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
+         {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,3 +173,7 @@ export default function LoginPage() {
     </div>
   );
 }
+```
+
+```
+</replit_final_file>

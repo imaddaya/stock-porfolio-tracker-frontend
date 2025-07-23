@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
@@ -14,7 +13,7 @@ export default function ConfirmAccountDeletion() {
     const tokenStr = Array.isArray(token) ? token[0] : token;
 
     fetch(
-      `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/confirm-account-deletion?token=${encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/confirm-account-deletion?token=${encodeURIComponent(
         tokenStr
       )}`,
       {
@@ -28,11 +27,11 @@ export default function ConfirmAccountDeletion() {
         }
 
         setStatus("Account deleted successfully. You will be redirected to the homepage...");
-        
+
         // Clear any stored auth data
         localStorage.removeItem("access_token");
         localStorage.removeItem("user_email");
-        
+
         setTimeout(() => {
           router.push("/"); // go to homepage
         }, 3000);

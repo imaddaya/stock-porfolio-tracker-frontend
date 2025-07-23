@@ -13,7 +13,7 @@ export default function EmailVerified() {
     const tokenStr = Array.isArray(token) ? token[0] : token;
 
     fetch(
-      `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/verify-email?token=${encodeURIComponent(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-email?token=${encodeURIComponent(
         tokenStr
       )}`
     )

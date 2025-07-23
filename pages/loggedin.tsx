@@ -52,7 +52,7 @@ export default function LoggedIn() {
         const token = localStorage.getItem("access_token") || "";
 
         const res = await fetch(
-          `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks?keywords=${encodeURIComponent(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/stocks?keywords=${encodeURIComponent(
             search
           )}&offset=0&limit=50`,
           {
@@ -96,7 +96,7 @@ export default function LoggedIn() {
       const token = localStorage.getItem("access_token") || "";
 
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/stocks?keywords=${encodeURIComponent(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/stocks?keywords=${encodeURIComponent(
           search
         )}&offset=${offset}&limit=50`,
         {
@@ -280,7 +280,7 @@ export default function LoggedIn() {
                       try {
                         const token = localStorage.getItem("access_token") || "";
 
-                        const res = await fetch("https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/add", {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/add`, {
                           method: "POST",
                           headers: {
                             "Content-Type": "application/json",

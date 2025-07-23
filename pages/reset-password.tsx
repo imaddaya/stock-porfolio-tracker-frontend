@@ -50,7 +50,7 @@ export default function ResetPassword() {
 
     try {
       const response = await fetch(
-        "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/auth/reset-password",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/reset-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

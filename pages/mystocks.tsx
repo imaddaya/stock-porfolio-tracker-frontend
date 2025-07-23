@@ -41,7 +41,7 @@ export default function MyStocks() {
     }
 
     fetch(
-      "https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/summary`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ export default function MyStocks() {
 
     try {
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/remove/${symbol}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/remove/${symbol}`,
         {
           method: "DELETE",
           headers: {
@@ -100,7 +100,7 @@ export default function MyStocks() {
     setLoadingSymbol(symbol);
     try {
       const res = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/summary/${symbol}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/summary/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

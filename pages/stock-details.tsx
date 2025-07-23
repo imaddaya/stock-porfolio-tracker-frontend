@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
@@ -52,10 +51,10 @@ export default function StockDetails() {
   const fetchStockDetails = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      
+
       // Fetch weekly data
       const weeklyRes = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/weekly-data/${symbol}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/weekly-data/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -65,7 +64,7 @@ export default function StockDetails() {
 
       // Fetch monthly data
       const monthlyRes = await fetch(
-        `https://a1a01c3c-3efd-4dbc-b944-2de7bec0d5c1-00-b7jcjcvwjg4y.pike.replit.dev/portfolio/monthly-data/${symbol}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/portfolio/monthly-data/${symbol}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -114,20 +113,20 @@ export default function StockDetails() {
     const maxValue = Math.max(...allValues);
     const range = maxValue - minValue;
     const padding = range * 0.1;
-    
+
     const adjustedMin = Math.max(0, minValue - padding);
     const adjustedMax = maxValue + padding;
     const adjustedRange = adjustedMax - adjustedMin;
-    
+
     // Create values in multiples of 10
     const step = Math.ceil(adjustedRange / 50) * 10; // Approximately 5 grid lines
     const startValue = Math.floor(adjustedMin / 10) * 10;
-    
+
     const values = [];
     for (let i = startValue; i <= adjustedMax; i += step) {
       values.push(i);
     }
-    
+
     return { values: values.reverse(), min: adjustedMin, max: adjustedMax };
   };
 
@@ -178,7 +177,7 @@ export default function StockDetails() {
                 strokeWidth="1"
               />
             ))}
-            
+
             {/* Y-axis labels */}
             {yAxisValues.map((value, i) => (
               <text
@@ -199,7 +198,7 @@ export default function StockDetails() {
               const x = 80 + (index * (graphWidth - 120)) / (entries.length - 1);
               const closePrice = item.close;
               const y = 50 + ((maxValue - closePrice) / range) * 350;
-              
+
               return (
                 <g key={item.date}>
                   <circle 
@@ -238,7 +237,7 @@ export default function StockDetails() {
             })}
           </svg>
         </div>
-        
+
         {/* Selected point details */}
         {selectedPoint && (
           <div style={{ 
@@ -342,7 +341,7 @@ export default function StockDetails() {
           selectedWeeklyPoint,
           setSelectedWeeklyPoint
         )}
-        
+
         {/* Monthly graph second */}
         {renderGraph(
           monthlyData?.weekly_data, 
