@@ -1,24 +1,77 @@
-Welcome to the NextJS base template bootstrapped using the `create-next-app`. This template supports TypeScript, but you can use normal JavaScript as well.
+## ✅ Features
 
-## Getting Started
+### 🔐 User Authentication
 
-Hit the run button to start the development server.
+- **User Registration & Login**: Secure account creation and authentication  
+- **Password Reset**: Email-based password recovery system  
+- **Account Management**: Profile settings and account deletion  
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### 📊 Stock Management
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on `/api/hello`. This endpoint can be edited in `pages/api/hello.ts`.
+- **Stock Search**: Search for stocks by symbol or company name with autocomplete  
+- **Portfolio Tracking**: Add stocks to your personal portfolio  
+- **Real-time Data**: Fetch current stock prices and market data  
+- **Data Visualization**: Interactive weekly and monthly stock charts  
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### 💰 Portfolio Analytics
 
-## Learn More
+- **Quantity Tracking**: Record how many shares you own  
+- **Purchase Price Tracking**: Log your buy-in prices  
+- **Profit/Loss Calculation**: Automatic calculation of gains and losses  
+- **Color-coded Performance**: Visual indicators for profitable vs losing positions  
 
-To learn more about Next.js, take a look at the following resources:
+### 📈 Advanced Charts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Weekly & Monthly Views**: Separate charts for different time periods  
+- **Interactive Data Points**: Click on chart points for detailed information  
+- **Horizontal Scrolling**: Handle large datasets with smooth scrolling  
+- **Custom Scaling**: Smart Y-axis scaling in multiples of 10  
 
-## Productionizing your Next App
+### ⚙️ User Settings
 
-To make your next App run smoothly in production make sure to deploy your project with [Repl Deployments](https://docs.replit.com/hosting/deployments/about-deployments)!
+- **API Key Management**: Configure your Alpha Vantage API key  
+- **Email Reminders**: Set up daily portfolio update emails  
+- **Timezone Support**: Customize timezone for notifications  
+- **Profile Management**: Update personal information  
 
-You can also produce a production build by running `npm run build` and [changing the run command](https://docs.replit.com/programming-ide/configuring-repl#run) to `npm run start`.
+---
+
+## ⚙️ Installation / Setup
+
+### 📁 Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/your-username/stock-portfolio-tracker-frontend.git
+```
+---
+
+### 🔧 Step 2: Frontend Setup
+
+🖥️ In **Terminal**, run:
+
+```bash
+cd stock-portfolio-tracker-frontend
+```
+
+📥 Install dependencies:
+
+```bash
+npm install
+```
+
+▶️ Start the frontend server:
+
+```bash
+npm run dev
+```
+🌍 Frontend `.env.local` file
+
+Create a `.env.local` file inside the frontend folder with:
+
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+Frontend will be available at:  
+👉 `http://localhost:3000`
+
+
