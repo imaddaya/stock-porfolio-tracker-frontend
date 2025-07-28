@@ -56,7 +56,7 @@ A user-friendly **FastAPI-based stock portfolio management system** that helps y
 git clone https://github.com/your-username/stock-portfolio-tracker-frontend.git
 ```
 
-🖥️ In **Terminal**, run:
+🖥️ Change directory to where you cloned your frontend repo :
 
 ```bash
 cd stock-portfolio-tracker-frontend
