@@ -50,7 +50,7 @@ A user-friendly **FastAPI-based stock portfolio management system** that helps y
 
 ## ⚙️ Installation / Setup
 
-### 📁 Clone the Repository
+📁 Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/stock-portfolio-tracker-frontend.git
