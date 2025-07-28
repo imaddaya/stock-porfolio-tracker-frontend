@@ -288,7 +288,7 @@ export default function MyStocks() {
               
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.85rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <label style={{ minWidth: "80px" }}>Quantity:</label>
+                  <label style={{ minWidth: "40px" }}>Quantity:</label>
                   <input
                     type="number"
                     min="0"
@@ -307,7 +307,7 @@ export default function MyStocks() {
                 </div>
                 
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <label style={{ minWidth: "80px" }}>Bought at:</label>
+                  <label style={{ minWidth: "40px" }}>Bought at:</label>
                   <input
                     type="number"
                     min="0"
