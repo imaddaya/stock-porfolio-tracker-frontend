@@ -1,3 +1,15 @@
+# 📈 Stock App
+
+A user-friendly **FastAPI-based stock portfolio management system** that helps you **track your stocks**, monitor **real-time prices**, calculate **profit and loss**, and receive **email notifications** — all with efficient real-time stock data caching.
+
+## 🛠️ Prerequisites
+
+- Node.js and npm
+- VS Code installed  
+- Git
+  
+---
+
 ## ✅ Features
 
 ### 🔐 User Authentication
@@ -38,14 +50,11 @@
 
 ## ⚙️ Installation / Setup
 
-### 📁 Step 1: Clone the Repository
+### 📁 Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/stock-portfolio-tracker-frontend.git
 ```
----
-
-### 🔧 Step 2: Frontend Setup
 
 🖥️ In **Terminal**, run:
 
@@ -64,6 +73,9 @@ npm install
 ```bash
 npm run dev
 ```
+---
+
+## 🌐 Environment Variables
 🌍 Frontend `.env.local` file
 
 Create a `.env.local` file inside the frontend folder with:
