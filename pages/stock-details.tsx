@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 
 type StockDataPoint = {
@@ -36,19 +36,7 @@ export default function StockDetails() {
   const router = useRouter();
   const { symbol } = router.query;
 
-  useEffect(() => {
-    if (!symbol) return;
-
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/");
-      return;
-    }
-
-    fetchStockDetails();
-  }, [symbol, router]);
-
-  const fetchStockDetails = async () => {
+    const fetchStockDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
 
@@ -97,7 +85,19 @@ export default function StockDetails() {
       setError("An error occurred while fetching stock details.");
     }
     setLoading(false);
-  };
+  }, [symbol]);
+
+  useEffect(() => {
+    if (!symbol) return;
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    fetchStockDetails();
+  }, [symbol, router, fetchStockDetails]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

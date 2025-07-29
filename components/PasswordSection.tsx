@@ -57,7 +57,7 @@ export default function PasswordSection({ loading, onChangePassword, showPasswor
             marginTop: "0.5rem",
           }}
         >
-          If your email is registered and verified, you'll receive password reset instructions.
+          If your email is registered and verified, you&apos;ll receive password reset instructions.
         </div>
       )}
     </div>

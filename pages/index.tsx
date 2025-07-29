@@ -1,6 +1,7 @@
 // pages/login_page.tsx
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -159,13 +160,13 @@ export default function LoginPage() {
         </button>
 
         <div>
-          Don't have an account?{" "}
-          <a
+          Don&apos;t have an account?{" "}
+          <Link
             href="/signup"
             style={{ color: "#0070f3", textDecoration: "underline", cursor: "pointer" }}
           >
-            Signup here
-          </a>
+            <a>Signup here</a>
+          </Link>
         </div>
 
         {status && <p style={{ color: "red", marginTop: "1rem" }}>{status}</p>}
